@@ -14,6 +14,7 @@ from .utils import (
     datetime_from_string, get_art_url, image_url, get_current_datetime
 )
 from .lazylogger import LazyLogger
+from .image_server import PORT_NUMBER
 
 log = LazyLogger(__name__)
 
@@ -755,15 +756,20 @@ def get_art(item, server):
     }
 
     image_tags = item.get("ImageTags", {})
+    item_id = item.get("Id")
     if image_tags and image_tags.get("Primary"):
-        art['thumb'] = get_art_url(item, "Primary", server=server)
+        art['thumb'] = "http://127.0.0.1:{}/gif/{}.gif".format(PORT_NUMBER, item_id)
 
     item_type = item["Type"]
 
     if item_type == "Genre":
-        art['poster'] = get_art_url(item, "Primary", server=server)
+        if image_tags and image_tags.get("Primary"):
+            art['poster'] = "http://127.0.0.1:{}/gif/{}.gif".format(PORT_NUMBER, item_id)
     elif item_type == "Episode":
-        art['tvshow.poster'] = get_art_url(item, "Primary", parent=True, server=server)
+        series_id = item.get("SeriesId")
+        series_primary_tag = item.get("SeriesPrimaryImageTag")
+        if series_id and series_primary_tag:
+            art['tvshow.poster'] = "http://127.0.0.1:{}/gif/{}.gif".format(PORT_NUMBER, series_id)
         art['tvshow.clearart'] = get_art_url(item, "Art", parent=True, server=server)
         art['clearart'] = get_art_url(item, "Art", parent=True, server=server)
         art['tvshow.clearlogo'] = get_art_url(item, "Logo", parent=True, server=server)
@@ -775,9 +781,13 @@ def get_art(item, server):
         art['tvshow.fanart'] = get_art_url(item, "Backdrop", parent=True, server=server)
         art['fanart'] = get_art_url(item, "Backdrop", parent=True, server=server)
     elif item_type == "Season":
-        art['tvshow.poster'] = get_art_url(item, "Primary", parent=True, server=server)
-        art['season.poster'] = get_art_url(item, "Primary", parent=False, server=server)
-        art['poster'] = get_art_url(item, "Primary", parent=False, server=server)
+        series_id = item.get("SeriesId")
+        series_primary_tag = item.get("SeriesPrimaryImageTag")
+        if series_id and series_primary_tag:
+            art['tvshow.poster'] = "http://127.0.0.1:{}/gif/{}.gif".format(PORT_NUMBER, series_id)
+        if image_tags and image_tags.get("Primary"):
+            art['season.poster'] = "http://127.0.0.1:{}/gif/{}.gif".format(PORT_NUMBER, item_id)
+            art['poster'] = "http://127.0.0.1:{}/gif/{}.gif".format(PORT_NUMBER, item_id)
         art['tvshow.clearart'] = get_art_url(item, "Art", parent=True, server=server)
         art['clearart'] = get_art_url(item, "Art", parent=True, server=server)
         art['tvshow.clearlogo'] = get_art_url(item, "Logo", parent=True, server=server)
@@ -791,8 +801,9 @@ def get_art(item, server):
         art['tvshow.fanart'] = get_art_url(item, "Backdrop", parent=True, server=server)
         art['fanart'] = get_art_url(item, "Backdrop", parent=True, server=server)
     elif item_type == "Series":
-        art['tvshow.poster'] = get_art_url(item, "Primary", parent=False, server=server)
-        art['poster'] = get_art_url(item, "Primary", parent=False, server=server)
+        if image_tags and image_tags.get("Primary"):
+            art['tvshow.poster'] = "http://127.0.0.1:{}/gif/{}.gif".format(PORT_NUMBER, item_id)
+            art['poster'] = "http://127.0.0.1:{}/gif/{}.gif".format(PORT_NUMBER, item_id)
         art['tvshow.clearart'] = get_art_url(item, "Art", parent=False, server=server)
         art['clearart'] = get_art_url(item, "Art", parent=False, server=server)
         art['tvshow.clearlogo'] = get_art_url(item, "Logo", parent=False, server=server)
@@ -804,7 +815,8 @@ def get_art(item, server):
         art['tvshow.fanart'] = get_art_url(item, "Backdrop", parent=False, server=server)
         art['fanart'] = get_art_url(item, "Backdrop", parent=False, server=server)
     elif item_type == "Movie" or item_type == "BoxSet":
-        art['poster'] = get_art_url(item, "Primary", server=server)
+        if image_tags and image_tags.get("Primary"):
+            art['poster'] = "http://127.0.0.1:{}/gif/{}.gif".format(PORT_NUMBER, item_id)
         art['landscape'] = get_art_url(item, "Thumb", server=server)
         art['banner'] = get_art_url(item, "Banner", server=server)
         art['clearlogo'] = get_art_url(item, "Logo", server=server)

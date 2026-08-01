@@ -31,6 +31,34 @@ except ImportError:
 PORT_NUMBER = 24276
 log = LazyLogger(__name__)
 
+_gif_cache = {}
+_gif_cache_lock = threading.Lock()
+
+
+def serve_gif_proxy(item_id):
+    settings = xbmcaddon.Addon()
+    server = settings.getSetting('server_address')
+    if not server:
+        return None, None
+
+    with _gif_cache_lock:
+        if item_id in _gif_cache:
+            return _gif_cache[item_id]
+
+    url = "{}/Items/{}/Images/Primary/0?Format=original".format(server, item_id)
+    try:
+        resp = requests.get(url, stream=True, timeout=10)
+        if resp.status_code == 200:
+            content_type = resp.headers.get('Content-Type', 'image/jpeg')
+            content_bytes = resp.content
+            with _gif_cache_lock:
+                _gif_cache[item_id] = (content_type, content_bytes)
+            return content_type, content_bytes
+    except Exception as e:
+        log.debug("Error fetching gif proxy: {0}".format(e))
+
+    return None, None
+
 
 def get_image_links(url):
 
@@ -161,6 +189,21 @@ class HttpImageHandler(BaseHTTPRequestHandler):
         return
 
     def serve_image(self):
+
+        if self.path.startswith("/gif/"):
+            item_id = self.path[5:].split(".")[0]
+            content_type, content_bytes = serve_gif_proxy(item_id)
+            if content_type and content_bytes:
+                self.send_response(200)
+                self.send_header('Content-type', content_type)
+                self.send_header('Content-Length', str(len(content_bytes)))
+                self.send_header('Cache-Control', 'max-age=86400')
+                self.end_headers()
+                self.wfile.write(content_bytes)
+            else:
+                self.send_response(404)
+                self.end_headers()
+            return
 
         if pil_loaded:
 

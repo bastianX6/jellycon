@@ -1,9 +1,10 @@
-version: '1.0.5~beta'
+version: '1.0.6~beta'
 changelog: |-
   New Features
   ------------
   + Add Unwatched / Watched / Favorite / Continue Watching filters to media listings
   + Add Favorites entry to the main menu showing all favorite items
+  + Animated GIF preview thumbnails (use local .gif proxy so Kodi animates them)
 
   Bug Fixes
   ---------
