@@ -654,21 +654,80 @@ def get_filtered_list_url(base_url, filter_type):
         params = dict(parse_qsl(url_parts[1]))
     params.pop('IsPlayed', None)
     params.pop('Filters', None)
+    
     if filter_type == 'unwatched':
-        params['IsPlayed'] = 'false'
+        params['IsPlayed'] = False
+        include_types = params.get('IncludeItemTypes', '')
+        if include_types and 'Video' not in include_types:
+            params['IncludeItemTypes'] = include_types + ',Video'
     elif filter_type == 'watched':
-        params['IsPlayed'] = 'true'
+        params['IsPlayed'] = True
+        include_types = params.get('IncludeItemTypes', '')
+        if include_types and 'Video' not in include_types:
+            params['IncludeItemTypes'] = include_types + ',Video'
     elif filter_type == 'favorite':
         params['Filters'] = 'IsFavorite'
+        include_types = params.get('IncludeItemTypes', '')
+        if include_types and 'Video' not in include_types:
+            params['IncludeItemTypes'] = include_types + ',Video'
     elif filter_type == 'resumable':
         params['Filters'] = 'IsResumable'
+        include_types = params.get('IncludeItemTypes', '')
+        if include_types:
+            types_list = [t.strip() for t in include_types.split(',')]
+            types_list = [t for t in types_list if t not in ['Series', 'Season', 'BoxSet']]
+            for required_type in ['Episode', 'Movie', 'Video']:
+                if required_type not in types_list:
+                    types_list.append(required_type)
+            params['IncludeItemTypes'] = ','.join(types_list)
+        else:
+            params['IncludeItemTypes'] = 'Episode,Movie,Video'
     return path + '?' + urlencode(params)
+
+
+def normalize_url_for_filtering(url):
+    user_id = get_current_user_id()
+    url_lower = url.lower()
+    
+    if '/shows/' in url_lower and '/seasons?' in url_lower:
+        url_parts = url.split('?', 1)
+        path_parts = url_parts[0].split('/')
+        series_idx = path_parts.index('Shows') + 1
+        series_id = path_parts[series_idx]
+        params = {
+            'ParentId': series_id,
+            'IncludeItemTypes': 'Season',
+            'Recursive': False
+        }
+        return get_jellyfin_url('/Users/{userid}/Items', params)
+    
+    elif '/shows/' in url_lower and '/episodes?' in url_lower:
+        url_parts = url.split('?', 1)
+        path_parts = url_parts[0].split('/')
+        series_idx = path_parts.index('Shows') + 1
+        series_id = path_parts[series_idx]
+        params = {
+            'ParentId': series_id,
+            'IncludeItemTypes': 'Episode',
+            'Recursive': True
+        }
+        if len(url_parts) == 2:
+            query_params = dict(parse_qsl(url_parts[1]))
+            if 'seasonid' in query_params:
+                params['SeasonId'] = query_params['seasonid']
+        return get_jellyfin_url('/Users/{userid}/Items', params)
+    
+    elif '/users/' in url_lower:
+        return url
+    
+    return url
 
 
 def show_filter_menu(params):
     handle = int(sys.argv[1])
 
     base_url = unquote(params.get('url', ''))
+    base_url = normalize_url_for_filtering(base_url)
     media_type = params.get('media_type', '')
     name_format = params.get('name_format', None)
     sort = params.get('sort', None)

@@ -74,6 +74,8 @@ def get_content(url, params):
         content_type = 'episodes'
     elif media_type == "playlists":
         view_type = "Playlists"
+    elif media_type == "folder" or media_type == "collectionfolder":
+        content_type = 'files'
     elif media_type == "musicvideos":
         view_type = "Music Videos"
         content_type = 'musicvideos'
@@ -201,7 +203,7 @@ def get_content(url, params):
     else:
         set_sort(pluginhandle, view_type, default_sort)
 
-    if content_type and dir_items and is_filterable_list(base_list_url):
+    if dir_items and is_filterable_list(base_list_url):
         filter_menu_url = build_filter_menu_url(base_list_url, params)
         if filter_menu_url:
             list_item = xbmcgui.ListItem(translate_string(30683))
@@ -480,9 +482,14 @@ def process_directory(url, progress, params, use_cache_data=False):
 
 
 def is_filterable_list(url):
-    if '/Items/Latest' in url or '/Items/Resume' in url:
+    url_lower = url.lower()
+    if '/items/latest' in url_lower or '/items/resume' in url_lower:
         return False
-    if '/Users/' in url and '/Items?' in url:
+    if '/shows/nextup' in url_lower or '/artists/' in url_lower:
+        return False
+    if '/users/' in url_lower and '/items?' in url_lower:
+        return True
+    if '/shows/' in url_lower and ('/seasons?' in url_lower or '/episodes?' in url_lower):
         return True
     return False
 
