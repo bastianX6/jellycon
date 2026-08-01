@@ -9,7 +9,7 @@ import string
 import xbmcplugin
 import xbmcaddon
 from six import ensure_binary, ensure_text
-from six.moves.urllib.parse import quote
+from six.moves.urllib.parse import quote, unquote, parse_qsl, urlencode
 
 from .dir_functions import get_content
 from .jellyfin import api
@@ -578,6 +578,20 @@ def display_main_menu():
         display_library_views(None)
         return
 
+    favorites_params = {
+        "Fields": get_default_filters(),
+        "ImageTypeLimit": 1,
+        "Filters": "IsFavorite",
+        "IncludeItemTypes": "Movie,Series,Season,Episode,BoxSet,MusicAlbum,MusicVideo,Audio,Playlist",
+        "Recursive": True,
+        "SortBy": "Name",
+        "SortOrder": "Ascending"
+    }
+    favorites_url = get_jellyfin_url("/Users/{userid}/Items", favorites_params)
+    add_menu_directory_item(translate_string(30687),
+                            "plugin://plugin.video.jellycon/?mode=GET_CONTENT&url=" + quote(favorites_url) +
+                            "&media_type=mixed")
+
     add_menu_directory_item(translate_string(30406),
                             "plugin://plugin.video.jellycon/?mode=SHOW_ADDON_MENU&type=library")
     add_menu_directory_item(translate_string(30407),
@@ -629,6 +643,54 @@ def show_global_types(params):
                             "plugin://plugin.video.jellycon/?mode=SHOW_ADDON_MENU&type=global_list_movies")
     add_menu_directory_item(translate_string(30261),
                             "plugin://plugin.video.jellycon/?mode=SHOW_ADDON_MENU&type=global_list_tvshows")
+
+    xbmcplugin.endOfDirectory(handle)
+
+
+def get_filtered_list_url(base_url, filter_type):
+    url_parts = base_url.split('?', 1)
+    path = url_parts[0]
+    params = {}
+    if len(url_parts) == 2:
+        params = dict(parse_qsl(url_parts[1]))
+    params.pop('IsPlayed', None)
+    params.pop('Filters', None)
+    if filter_type == 'unwatched':
+        params['IsPlayed'] = 'false'
+    elif filter_type == 'watched':
+        params['IsPlayed'] = 'true'
+    elif filter_type == 'favorite':
+        params['Filters'] = 'IsFavorite'
+    elif filter_type == 'resumable':
+        params['Filters'] = 'IsResumable'
+    return path + '?' + urlencode(params)
+
+
+def show_filter_menu(params):
+    handle = int(sys.argv[1])
+
+    base_url = unquote(params.get('url', ''))
+    media_type = params.get('media_type', '')
+    name_format = params.get('name_format', None)
+    sort = params.get('sort', None)
+
+    url_extra = ''
+    if name_format:
+        url_extra += '&name_format=' + quote(name_format)
+    if sort:
+        url_extra += '&sort=' + quote(sort)
+
+    filter_options = [
+        (30684, 'unwatched'),
+        (30685, 'watched'),
+        (30686, 'favorite'),
+        (30445, 'resumable'),
+    ]
+
+    for string_id, filter_type in filter_options:
+        filtered_url = get_filtered_list_url(base_url, filter_type)
+        url = sys.argv[0] + '?url=' + quote(filtered_url) + '&mode=GET_CONTENT&media_type=' + quote(media_type) + url_extra
+        add_menu_directory_item(translate_string(string_id), url)
 
     xbmcplugin.endOfDirectory(handle)
 

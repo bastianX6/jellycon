@@ -1248,3 +1248,23 @@ msgid "Quick Connect timed out. Please try again."
 msgstr ""
 "Se agotó el tiempo de espera para la Conexión Rápida. Por favor, inténtelo "
 "otra vez."
+
+msgctxt "#30683"
+msgid "Filters"
+msgstr "Filtros"
+
+msgctxt "#30684"
+msgid "Unwatched"
+msgstr "No reproducido"
+
+msgctxt "#30685"
+msgid "Watched"
+msgstr "Reproducido"
+
+msgctxt "#30686"
+msgid "Favorite"
+msgstr "Favorito"
+
+msgctxt "#30687"
+msgid "Favorites"
+msgstr "Favoritos"

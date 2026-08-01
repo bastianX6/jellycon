@@ -41,6 +41,7 @@ def get_content(url, params):
     content_type = ""
     media_type = str(media_type).lower().strip()
     url_params = dict(parse_qsl(url))
+    base_list_url = url
     if media_type.startswith("movie"):
         view_type = "Movies"
         content_type = 'movies'
@@ -197,6 +198,12 @@ def get_content(url, params):
         xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_UNSORTED)
     else:
         set_sort(pluginhandle, view_type, default_sort)
+
+    if content_type and dir_items and is_filterable_list(base_list_url):
+        filter_menu_url = build_filter_menu_url(base_list_url, params)
+        if filter_menu_url:
+            list_item = xbmcgui.ListItem(translate_string(30683))
+            dir_items.insert(0, (filter_menu_url, list_item, True))
 
     xbmcplugin.addDirectoryItems(pluginhandle, dir_items)
     xbmcplugin.endOfDirectory(pluginhandle, cacheToDisc=False)
@@ -468,3 +475,23 @@ def process_directory(url, progress, params, use_cache_data=False):
         cache_thread.start()
 
     return dir_items, detected_type, total_records
+
+
+def is_filterable_list(url):
+    if '/Items/Latest' in url or '/Items/Resume' in url:
+        return False
+    if '/Users/' in url and '/Items?' in url:
+        return True
+    return False
+
+
+def build_filter_menu_url(url, params):
+    media_type = params.get('media_type', '')
+    name_format = params.get('name_format', None)
+    sort = params.get('sort', None)
+    url_extra = ''
+    if name_format:
+        url_extra += '&name_format=' + quote(name_format)
+    if sort:
+        url_extra += '&sort=' + quote(sort)
+    return sys.argv[0] + '?mode=SHOW_FILTERS&url=' + quote(url) + '&media_type=' + quote(media_type) + url_extra

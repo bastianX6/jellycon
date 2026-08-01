@@ -1240,3 +1240,23 @@ msgstr "Quick Connect authentication failed. Please try again."
 msgctxt "#30682"
 msgid "Quick Connect timed out. Please try again."
 msgstr "Quick Connect timed out. Please try again."
+
+msgctxt "#30683"
+msgid "Filters"
+msgstr "Filters"
+
+msgctxt "#30684"
+msgid "Unwatched"
+msgstr "Unwatched"
+
+msgctxt "#30685"
+msgid "Watched"
+msgstr "Watched"
+
+msgctxt "#30686"
+msgid "Favorite"
+msgstr "Favorite"
+
+msgctxt "#30687"
+msgid "Favorites"
+msgstr "Favorites"

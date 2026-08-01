@@ -1,9 +1,9 @@
-version: '1.0.2'
+version: '1.0.3-beta'
 changelog: |-
-  Bug Fixes
-  ---------
-  + Accurately report playback on back-to-back plays (#447) @mcarlton00
-  + intro-skipper: fix skip dialog showing after clicking (#440) @pwNBait
+  New Features
+  ------------
+  + Add Unwatched / Watched / Favorite / Continue Watching filters to media listings
+  + Add Favorites entry to the main menu showing all favorite items
 dependencies:
   py2:
     - addon: 'xbmc.python'

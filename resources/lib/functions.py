@@ -27,7 +27,7 @@ from .lazylogger import LazyLogger
 from .menu_functions import (
     display_main_menu, display_menu, show_movie_alpha_list,
     show_tvshow_alpha_list, show_genre_list, show_search,
-    show_movie_pages, show_artist_alpha_list
+    show_movie_pages, show_artist_alpha_list, show_filter_menu
 )
 from .server_sessions import show_server_sessions
 from .action_menu import ActionMenu
@@ -146,6 +146,8 @@ def main_entry_point():
         show_server_sessions()
     elif mode == "SHOW_ADDON_MENU":
         display_menu(params)
+    elif mode == "SHOW_FILTERS":
+        show_filter_menu(params)
     else:
         log.debug("JellyCon -> Mode: {0}".format(mode))
         log.debug("JellyCon -> URL: {0}".format(param_url))
