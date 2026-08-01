@@ -1,9 +1,13 @@
-version: '1.0.3-beta'
+version: '1.0.3~beta'
 changelog: |-
   New Features
   ------------
   + Add Unwatched / Watched / Favorite / Continue Watching filters to media listings
   + Add Favorites entry to the main menu showing all favorite items
+
+  Bug Fixes
+  ---------
+  + Use Kodi-valid version notation (1.0.3~beta+py3) to fix install crash
 dependencies:
   py2:
     - addon: 'xbmc.python'
