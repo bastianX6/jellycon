@@ -3,16 +3,12 @@ from __future__ import (
 )
 
 import os
-import threading
 import requests
 import xbmc
 import xbmcvfs
 import xbmcaddon
 
-from .utils import log
-
-_download_set = set()
-_download_lock = threading.Lock()
+from .utils import log, translate_string
 
 
 def get_gif_dir():
@@ -64,35 +60,23 @@ def _fetch_gif(item_id, tag):
         log.error('Failed to fetch GIF: {0}', e)
 
 
-def download_gifs_async(gif_keys):
+def download_gifs_sync(gif_keys, progress=None):
     if not gif_keys:
         return
-
-    keys_to_fetch = []
-    with _download_lock:
-        for key in gif_keys:
-            if key not in _download_set and not is_gif_cached(key[0], key[1]):
-                _download_set.add(key)
-                keys_to_fetch.append(key)
-
-    if not keys_to_fetch:
+    keys = []
+    seen = set()
+    for key in gif_keys:
+        if key not in seen:
+            seen.add(key)
+            keys.append(key)
+    missing = [k for k in keys if not is_gif_cached(k[0], k[1])]
+    if not missing:
         return
-
-    def download_thread():
-        any_new = False
-        for item_id, tag in keys_to_fetch:
-            if not is_gif_cached(item_id, tag):
-                _fetch_gif(item_id, tag)
-                if is_gif_cached(item_id, tag):
-                    any_new = True
-            with _download_lock:
-                _download_set.discard((item_id, tag))
-
-        if any_new:
-            try:
-                xbmc.executebuiltin('Container.Refresh()')
-            except:
-                pass
-
-    thread = threading.Thread(daemon=True, target=download_thread)
-    thread.start()
+    total = len(missing)
+    for idx, (item_id, tag) in enumerate(missing):
+        if progress is not None and progress.iscanceled():
+            return
+        _fetch_gif(item_id, tag)
+        if progress is not None:
+            percent = int(((idx + 1) / float(total)) * 100)
+            progress.update(percent, translate_string(30126) + ' {}/{}'.format(idx + 1, total))

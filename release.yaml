@@ -1,4 +1,4 @@
-version: '1.0.9~beta'
+version: '1.0.10~beta'
 changelog: |-
   New Features
   ------------
@@ -6,6 +6,7 @@ changelog: |-
   + Add Favorites entry to the main menu showing all favorite items
   + Animated GIF preview thumbnails (use local .gif proxy so Kodi animates them)
   + Animate GIF preview thumbnails via local cache (downloaded lazily when a folder is opened)
+  + Download GIF previews synchronously when opening a folder (reuses already-downloaded GIFs)
 
   Bug Fixes
   ---------

@@ -12,9 +12,9 @@ from six.moves.urllib.parse import quote, unquote, parse_qsl
 
 from .datamanager import DataManager
 from .lazylogger import LazyLogger
-from .item_functions import add_gui_item, ItemDetails
+from .item_functions import add_gui_item, ItemDetails, apply_cached_gif_art
 from .tracking import timer
-from .gif_cache import download_gifs_async
+from .gif_cache import download_gifs_sync
 from .utils import (
     send_event_notification, translate_string,
     load_user_details, get_default_filters
@@ -334,6 +334,8 @@ def process_directory(url, progress, params, use_cache_data=False):
         get_content(season_url, params)
         return None, None, None
 
+    show_empty_folders = settings.getSetting("show_empty_folders") == 'true'
+
     hide_unwatched_details = settings.getSetting('hide_unwatched_details') == 'true'
 
     display_options = {}
@@ -354,7 +356,21 @@ def process_directory(url, progress, params, use_cache_data=False):
     detected_type = None
     dir_items = []
     OnlyTotallyUnwatchedTvShow = params.get("OnlyTotallyUnwatchedTvShow", None)
+
     gif_keys = []
+    for item_details in item_list:
+        if getattr(item_details, 'gif_keys', None):
+            gif_keys.extend(item_details.gif_keys)
+    if gif_keys:
+        gif_keys = list(set(gif_keys))
+        gif_progress = None
+        if settings.getSetting('showLoadProgress') == "true":
+            gif_progress = xbmcgui.DialogProgress()
+            gif_progress.create(translate_string(30112))
+        download_gifs_sync(gif_keys, gif_progress)
+        if gif_progress is not None:
+            gif_progress.close()
+
     for item_details in item_list:
         if OnlyTotallyUnwatchedTvShow == "1" and item_details.watched_episodes > 0:
             continue
@@ -384,6 +400,8 @@ def process_directory(url, progress, params, use_cache_data=False):
             item_details.plot = "[Spoiler Alert]"
             item_details.art["poster"] = item_details.art["tvshow.poster"]
             item_details.art["thumb"] = item_details.art["tvshow.poster"]
+
+        apply_cached_gif_art(item_details)
 
         if item_details.is_folder is True:
             if item_details.item_type == "Series":
@@ -439,12 +457,6 @@ def process_directory(url, progress, params, use_cache_data=False):
             if gui_item:
                 dir_items.append(gui_item)
 
-        if item_details.gif_keys:
-            gif_keys.extend(item_details.gif_keys)
-
-        if item_details.gif_keys:
-            gif_keys.extend(item_details.gif_keys)
-
     # add the all episodes item
     show_all_episodes = settings.getSetting('show_all_episodes') == 'true'
     if (show_all_episodes
@@ -485,9 +497,6 @@ def process_directory(url, progress, params, use_cache_data=False):
 
     if cache_thread is not None:
         cache_thread.start()
-
-    if gif_keys:
-        download_gifs_async(list(set(gif_keys)))
 
     return dir_items, detected_type, total_records
 

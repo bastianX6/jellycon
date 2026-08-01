@@ -21,6 +21,18 @@ PORT_NUMBER = 24276
 log = LazyLogger(__name__)
 
 
+def apply_cached_gif_art(item_details):
+    if not getattr(item_details, 'gif_keys', None):
+        return
+    for item_id, tag in item_details.gif_keys:
+        if is_gif_cached(item_id, tag):
+            local_path = get_gif_path(item_id, tag)
+            proxy_url = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
+            for key, value in item_details.art.items():
+                if value == proxy_url:
+                    item_details.art[key] = local_path
+
+
 class ItemDetails:
 
     name = ""
