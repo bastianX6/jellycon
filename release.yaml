@@ -1,4 +1,4 @@
-version: '1.0.7~beta'
+version: '1.0.8~beta'
 changelog: |-
   New Features
   ------------
@@ -8,6 +8,7 @@ changelog: |-
 
   Bug Fixes
   ---------
+  + Fix addon startup crash caused by circular import
   + Fix GIF proxy authentication (include image Tag in proxy URL)
   + Use Kodi-valid version notation (1.0.3~beta+py3) to fix install crash
   + Fix empty Favorites list (remove IncludeItemTypes restriction)

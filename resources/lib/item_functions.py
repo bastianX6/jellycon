@@ -14,7 +14,8 @@ from .utils import (
     datetime_from_string, get_art_url, image_url, get_current_datetime
 )
 from .lazylogger import LazyLogger
-from .image_server import PORT_NUMBER
+
+PORT_NUMBER = 24276
 
 log = LazyLogger(__name__)
 
