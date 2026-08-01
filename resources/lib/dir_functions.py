@@ -77,6 +77,8 @@ def get_content(url, params):
     elif media_type == "musicvideos":
         view_type = "Music Videos"
         content_type = 'musicvideos'
+    elif media_type == "homevideos":
+        content_type = 'videos'
     elif media_type == "mixed":
         content_type = 'videos'
 

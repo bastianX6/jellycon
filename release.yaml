@@ -1,4 +1,4 @@
-version: '1.0.3~beta'
+version: '1.0.4~beta'
 changelog: |-
   New Features
   ------------
@@ -8,6 +8,8 @@ changelog: |-
   Bug Fixes
   ---------
   + Use Kodi-valid version notation (1.0.3~beta+py3) to fix install crash
+  + Fix empty Favorites list (remove IncludeItemTypes restriction)
+  + Show Filters entry on all media listings including home videos/mixed
 dependencies:
   py2:
     - addon: 'xbmc.python'

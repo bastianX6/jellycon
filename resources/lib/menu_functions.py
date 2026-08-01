@@ -582,7 +582,6 @@ def display_main_menu():
         "Fields": get_default_filters(),
         "ImageTypeLimit": 1,
         "Filters": "IsFavorite",
-        "IncludeItemTypes": "Movie,Series,Season,Episode,BoxSet,MusicAlbum,MusicVideo,Audio,Playlist",
         "Recursive": True,
         "SortBy": "Name",
         "SortOrder": "Ascending"
