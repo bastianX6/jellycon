@@ -13,6 +13,7 @@ import xbmcgui
 from .utils import (
     datetime_from_string, get_art_url, image_url, get_current_datetime
 )
+from .gif_cache import get_gif_path, is_gif_cached
 from .lazylogger import LazyLogger
 
 PORT_NUMBER = 24276
@@ -37,6 +38,7 @@ class ItemDetails:
     track_number = 0
     series_id = None
     art = None
+    gif_keys = []
 
     mpaa = ""
     rating = None
@@ -331,6 +333,13 @@ def extract_item_info(item, gui_options):
     item_details.art = get_art(item, gui_options["server"])
     item_details.rating = item.get("OfficialRating")
     item_details.mpaa = item.get("OfficialRating")
+
+    item_details.gif_keys = []
+    image_tags = item.get("ImageTags") if isinstance(item.get("ImageTags"), dict) else {}
+    if image_tags.get("Primary"):
+        item_details.gif_keys.append((item.get("Id"), image_tags.get("Primary")))
+    if item.get("SeriesId") and item.get("SeriesPrimaryImageTag"):
+        item_details.gif_keys.append((item.get("SeriesId"), item.get("SeriesPrimaryImageTag")))
 
     item_details.community_rating = item.get("CommunityRating")
     if not item_details.community_rating:
@@ -760,7 +769,10 @@ def get_art(item, server):
     item_id = item.get("Id")
     if image_tags and image_tags.get("Primary"):
         tag = image_tags.get("Primary")
-        art['thumb'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
+        if is_gif_cached(item_id, tag):
+            art['thumb'] = get_gif_path(item_id, tag)
+        else:
+            art['thumb'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
     else:
         art['thumb'] = get_art_url(item, "Primary", server=server)
 
@@ -769,14 +781,20 @@ def get_art(item, server):
     if item_type == "Genre":
         if image_tags and image_tags.get("Primary"):
             tag = image_tags.get("Primary")
-            art['poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
+            if is_gif_cached(item_id, tag):
+                art['poster'] = get_gif_path(item_id, tag)
+            else:
+                art['poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
         else:
             art['poster'] = get_art_url(item, "Primary", server=server)
     elif item_type == "Episode":
         series_id = item.get("SeriesId")
         series_primary_tag = item.get("SeriesPrimaryImageTag")
         if series_id and series_primary_tag:
-            art['tvshow.poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, series_id, series_primary_tag)
+            if is_gif_cached(series_id, series_primary_tag):
+                art['tvshow.poster'] = get_gif_path(series_id, series_primary_tag)
+            else:
+                art['tvshow.poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, series_id, series_primary_tag)
         else:
             art['tvshow.poster'] = get_art_url(item, "Primary", parent=True, server=server)
         art['tvshow.clearart'] = get_art_url(item, "Art", parent=True, server=server)
@@ -793,13 +811,20 @@ def get_art(item, server):
         series_id = item.get("SeriesId")
         series_primary_tag = item.get("SeriesPrimaryImageTag")
         if series_id and series_primary_tag:
-            art['tvshow.poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, series_id, series_primary_tag)
+            if is_gif_cached(series_id, series_primary_tag):
+                art['tvshow.poster'] = get_gif_path(series_id, series_primary_tag)
+            else:
+                art['tvshow.poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, series_id, series_primary_tag)
         else:
             art['tvshow.poster'] = get_art_url(item, "Primary", parent=True, server=server)
         if image_tags and image_tags.get("Primary"):
             tag = image_tags.get("Primary")
-            art['season.poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
-            art['poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
+            if is_gif_cached(item_id, tag):
+                art['season.poster'] = get_gif_path(item_id, tag)
+                art['poster'] = get_gif_path(item_id, tag)
+            else:
+                art['season.poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
+                art['poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
         else:
             art['season.poster'] = get_art_url(item, "Primary", server=server)
             art['poster'] = get_art_url(item, "Primary", server=server)
@@ -818,8 +843,12 @@ def get_art(item, server):
     elif item_type == "Series":
         if image_tags and image_tags.get("Primary"):
             tag = image_tags.get("Primary")
-            art['tvshow.poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
-            art['poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
+            if is_gif_cached(item_id, tag):
+                art['tvshow.poster'] = get_gif_path(item_id, tag)
+                art['poster'] = get_gif_path(item_id, tag)
+            else:
+                art['tvshow.poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
+                art['poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
         else:
             art['tvshow.poster'] = get_art_url(item, "Primary", server=server)
             art['poster'] = get_art_url(item, "Primary", server=server)
@@ -836,7 +865,10 @@ def get_art(item, server):
     elif item_type == "Movie" or item_type == "BoxSet":
         if image_tags and image_tags.get("Primary"):
             tag = image_tags.get("Primary")
-            art['poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
+            if is_gif_cached(item_id, tag):
+                art['poster'] = get_gif_path(item_id, tag)
+            else:
+                art['poster'] = "http://127.0.0.1:{}/gif/{}/{}.gif".format(PORT_NUMBER, item_id, tag)
         else:
             art['poster'] = get_art_url(item, "Primary", server=server)
         art['landscape'] = get_art_url(item, "Thumb", server=server)

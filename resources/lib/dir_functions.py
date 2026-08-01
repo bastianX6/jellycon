@@ -14,6 +14,7 @@ from .datamanager import DataManager
 from .lazylogger import LazyLogger
 from .item_functions import add_gui_item, ItemDetails
 from .tracking import timer
+from .gif_cache import download_gifs_async
 from .utils import (
     send_event_notification, translate_string,
     load_user_details, get_default_filters
@@ -353,6 +354,7 @@ def process_directory(url, progress, params, use_cache_data=False):
     detected_type = None
     dir_items = []
     OnlyTotallyUnwatchedTvShow = params.get("OnlyTotallyUnwatchedTvShow", None)
+    gif_keys = []
     for item_details in item_list:
         if OnlyTotallyUnwatchedTvShow == "1" and item_details.watched_episodes > 0:
             continue
@@ -437,6 +439,12 @@ def process_directory(url, progress, params, use_cache_data=False):
             if gui_item:
                 dir_items.append(gui_item)
 
+        if item_details.gif_keys:
+            gif_keys.extend(item_details.gif_keys)
+
+        if item_details.gif_keys:
+            gif_keys.extend(item_details.gif_keys)
+
     # add the all episodes item
     show_all_episodes = settings.getSetting('show_all_episodes') == 'true'
     if (show_all_episodes
@@ -477,6 +485,9 @@ def process_directory(url, progress, params, use_cache_data=False):
 
     if cache_thread is not None:
         cache_thread.start()
+
+    if gif_keys:
+        download_gifs_async(list(set(gif_keys)))
 
     return dir_items, detected_type, total_records
 
