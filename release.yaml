@@ -1,4 +1,4 @@
-version: '1.0.6~beta'
+version: '1.0.7~beta'
 changelog: |-
   New Features
   ------------
@@ -8,6 +8,7 @@ changelog: |-
 
   Bug Fixes
   ---------
+  + Fix GIF proxy authentication (include image Tag in proxy URL)
   + Use Kodi-valid version notation (1.0.3~beta+py3) to fix install crash
   + Fix empty Favorites list (remove IncludeItemTypes restriction)
   + Show Filters entry on all media listings including home videos/mixed

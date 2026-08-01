@@ -35,24 +35,27 @@ _gif_cache = {}
 _gif_cache_lock = threading.Lock()
 
 
-def serve_gif_proxy(item_id):
+def serve_gif_proxy(item_id, tag):
     settings = xbmcaddon.Addon()
     server = settings.getSetting('server_address')
     if not server:
         return None, None
 
+    cache_key = (item_id, tag)
     with _gif_cache_lock:
-        if item_id in _gif_cache:
-            return _gif_cache[item_id]
+        if cache_key in _gif_cache:
+            return _gif_cache[cache_key]
 
-    url = "{}/Items/{}/Images/Primary/0?Format=original".format(server, item_id)
+    url = "{}/Items/{}/Images/Primary/0?Format=original&Tag={}".format(server, item_id, tag)
     try:
         resp = requests.get(url, stream=True, timeout=10)
         if resp.status_code == 200:
             content_type = resp.headers.get('Content-Type', 'image/jpeg')
             content_bytes = resp.content
             with _gif_cache_lock:
-                _gif_cache[item_id] = (content_type, content_bytes)
+                if len(_gif_cache) > 500:
+                    _gif_cache.clear()
+                _gif_cache[cache_key] = (content_type, content_bytes)
             return content_type, content_bytes
     except Exception as e:
         log.debug("Error fetching gif proxy: {0}".format(e))
@@ -191,15 +194,21 @@ class HttpImageHandler(BaseHTTPRequestHandler):
     def serve_image(self):
 
         if self.path.startswith("/gif/"):
-            item_id = self.path[5:].split(".")[0]
-            content_type, content_bytes = serve_gif_proxy(item_id)
-            if content_type and content_bytes:
-                self.send_response(200)
-                self.send_header('Content-type', content_type)
-                self.send_header('Content-Length', str(len(content_bytes)))
-                self.send_header('Cache-Control', 'max-age=86400')
-                self.end_headers()
-                self.wfile.write(content_bytes)
+            path_parts = self.path[5:].split(".")[0].split("/")
+            if len(path_parts) >= 2:
+                item_id = path_parts[0]
+                tag = path_parts[1]
+                content_type, content_bytes = serve_gif_proxy(item_id, tag)
+                if content_type and content_bytes:
+                    self.send_response(200)
+                    self.send_header('Content-type', content_type)
+                    self.send_header('Content-Length', str(len(content_bytes)))
+                    self.send_header('Cache-Control', 'max-age=86400')
+                    self.end_headers()
+                    self.wfile.write(content_bytes)
+                else:
+                    self.send_response(404)
+                    self.end_headers()
             else:
                 self.send_response(404)
                 self.end_headers()
