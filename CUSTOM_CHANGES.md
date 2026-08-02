@@ -9,26 +9,30 @@ The custom changes add animated GIF preview thumbnails and enhanced media filter
 **Official repo:** https://github.com/jellyfin/jellycon  
 **Current base version:** official v1.0.2
 
-When the official jellycon releases a new version, follow this workflow:
+Use the `sync_upstream.sh` script to pull upstream changes safely:
 
-1. Ensure the upstream remote is configured:
-   ```bash
-   git remote add upstream https://github.com/jellyfin/jellycon.git
-   ```
+```bash
+./sync_upstream.sh --help
+```
 
-2. Fetch the latest changes from upstream:
-   ```bash
-   git fetch upstream
-   ```
+### Script Usage
 
-3. Rebase or merge the upstream release tag/master into this branch:
-   ```bash
-   git rebase upstream/<tag>   # or
-   git merge upstream/master
-   ```
-   Resolve any conflicts that arise.
+- **Analysis (default):** `./sync_upstream.sh` — fetches and shows what would merge
+- **With version check:** `./sync_upstream.sh --version-check` — compares upstream/fork/base versions
+- **Merge upstream:** `./sync_upstream.sh --merge --base master` — performs the merge
+- **Strict branch check:** `./sync_upstream.sh --merge --require-branch` — errors if not on release/1.0.3-beta
 
-4. Re-apply and verify that the custom changes still hold, since upstream may have modified the same functions. Use the checklist below.
+**Options:**
+- `--remote <name>` — upstream remote name (default: upstream)
+- `--repo <url>` — upstream repo URL (default: https://github.com/jellyfin/jellycon.git)
+- `--base <ref>` — branch/ref to sync against (default: master)
+- `--fetch` — fetch upstream (on by default)
+- `--merge` — perform the merge/rebase
+- `--dry-run` — show what would happen (default unless --merge)
+- `--version-check` — compare versions
+- `--require-branch` — error if not on release/1.0.3-beta
+
+After merge, verify the custom changes still hold using the checklist below.
 
 **Files/functions to re-verify after each upstream sync:**
 - `resources/lib/menu_functions.py`: `show_filter_menu`, `get_filtered_list_url`, `normalize_url_for_filtering`
