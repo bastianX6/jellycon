@@ -210,6 +210,15 @@ def get_content(url, params):
             list_item = xbmcgui.ListItem(translate_string(30683))
             dir_items.insert(0, (filter_menu_url, list_item, True))
 
+    # add a "Play randomly" entry when the list contains playable items
+    show_shuffle_all = settings.getSetting("show_shuffle_all") == "true"
+    if show_shuffle_all and has_playable_items(dir_items):
+        shuffle_url = build_shuffle_all_url(base_list_url, params)
+        if shuffle_url:
+            list_item = xbmcgui.ListItem(translate_string(30688))
+            list_item.setArt({"icon": "DefaultShuffle.png"})
+            dir_items.insert(0, (shuffle_url, list_item, False))
+
     xbmcplugin.addDirectoryItems(pluginhandle, dir_items)
     xbmcplugin.endOfDirectory(pluginhandle, cacheToDisc=False)
 
@@ -524,3 +533,19 @@ def build_filter_menu_url(url, params):
     if sort:
         url_extra += '&sort=' + quote(sort)
     return sys.argv[0] + '?mode=SHOW_FILTERS&url=' + quote(url) + '&media_type=' + quote(media_type) + url_extra
+
+
+def has_playable_items(dir_items):
+    # a playable item is a non folder entry whose url triggers mode=PLAY
+    for entry in dir_items:
+        item_url = entry[0]
+        is_folder = entry[2]
+        if not is_folder and 'mode=PLAY' in item_url:
+            return True
+    return False
+
+
+def build_shuffle_all_url(url, params):
+    media_type = params.get('media_type', '')
+    return (sys.argv[0] + '?mode=PLAY_LIST_SHUFFLE&url=' + quote(url) +
+            '&media_type=' + quote(media_type))

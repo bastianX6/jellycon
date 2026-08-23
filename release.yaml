@@ -1,7 +1,8 @@
-version: '1.0.10~beta'
+version: '1.0.11~beta'
 changelog: |-
   New Features
   ------------
+  + Add 'Play randomly' option to media listings to shuffle-play all playable items in the list
   + Add Unwatched / Watched / Favorite / Continue Watching filters to media listings
   + Add Favorites entry to the main menu showing all favorite items
   + Animated GIF preview thumbnails (use local .gif proxy so Kodi animates them)

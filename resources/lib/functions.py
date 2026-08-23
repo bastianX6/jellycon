@@ -39,7 +39,7 @@ from .cache_images import CacheArtwork
 from .dir_functions import get_content, process_directory
 from .tracking import timer
 from .skin_cloner import clone_default_skin
-from .play_utils import play_file
+from .play_utils import play_file, play_list_shuffle
 
 __addon__ = xbmcaddon.Addon()
 __addondir__ = translate_path(__addon__.getAddonInfo('profile'))
@@ -148,6 +148,8 @@ def main_entry_point():
         display_menu(params)
     elif mode == "SHOW_FILTERS":
         show_filter_menu(params)
+    elif mode == "PLAY_LIST_SHUFFLE":
+        play_list_shuffle(param_url)
     else:
         log.debug("JellyCon -> Mode: {0}".format(mode))
         log.debug("JellyCon -> URL: {0}".format(param_url))

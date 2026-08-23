@@ -40,8 +40,12 @@ After merge, verify the custom changes still hold using the checklist below.
 - `resources/lib/gif_cache.py` (entire file)
 - `resources/lib/image_server.py`: GIF proxy endpoint `/gif/{item_id}/{tag}.gif`, port 24276
 - `resources/lib/item_functions.py`: `apply_cached_gif_art`, `get_art` (local GIF path usage)
-- `resources/language/resource.language.en_gb/strings.po`: strings 30683-30687
-- `resources/language/resource.language.es_es/strings.po`: strings 30683-30687
+- `resources/language/resource.language.en_gb/strings.po`: strings 30683-30689
+- `resources/language/resource.language.es_es/strings.po`: strings 30683-30689
+- `resources/lib/dir_functions.py`: `has_playable_items`, `build_shuffle_all_url`, get_content "Play randomly" insertion
+- `resources/lib/play_utils.py`: `play_list_shuffle`
+- `resources/lib/functions.py`: `PLAY_LIST_SHUFFLE` mode dispatch
+- `resources/settings.xml`: `show_shuffle_all` setting (label 30689)
 - `release.yaml`: version notation with `~beta`
 
 ## Custom Features
@@ -78,6 +82,18 @@ After merge, verify the custom changes still hold using the checklist below.
 **Files/functions:**
 - `resources/lib/dir_functions.py`: get_content mapping
 
+### 4. Play Randomly (Shuffle All)
+
+**Description:** Adds a "Play randomly" (Reproducir aleatoriamente) entry at the top of any media listing that contains playable items. Selecting it re-queries the same Jellyfin list with a random ordering (limited by the `max_play_queue` setting), ignoring sub folders and the Filters/paging UI entries, and plays all resulting items as a Kodi video playlist. Controlled by the `show_shuffle_all` setting (enabled by default).
+
+**Files/functions:**
+- `resources/lib/dir_functions.py`: `has_playable_items`, `build_shuffle_all_url`, "Play randomly" insertion in `get_content`
+- `resources/lib/functions.py`: `PLAY_LIST_SHUFFLE` mode dispatch
+- `resources/lib/play_utils.py`: `play_list_shuffle`
+- `resources/settings.xml`: `show_shuffle_all` (default true, label 30689)
+
+**Translation strings:** 30688 (Play randomly), 30689 (setting label)
+
 ## Build & Release Notes
 
 **Build command:**
@@ -111,6 +127,8 @@ python3 build.py --version py3
 | 30685 | Watched | Vistos |
 | 30686 | Favorites | Favoritos |
 | 30687 | Continue Watching | Continuar viendo |
+| 30688 | Play randomly | Reproducir aleatoriamente |
+| 30689 | Show 'Play randomly' option in lists | Mostrar la opción 'Reproducir aleatoriamente' en los listados |
 
 ## Known Limitations
 

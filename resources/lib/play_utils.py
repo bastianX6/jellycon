@@ -8,18 +8,19 @@ import re
 import sys
 import binascii
 import datetime
+import random
 
 import xbmc
 import xbmcgui
 import xbmcaddon
 import xbmcvfs
 import xbmcplugin
-from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlencode, unquote, parse_qsl
 
 from .jellyfin import api
 from .lazylogger import LazyLogger
 from .dialogs import ResumeDialog
-from .utils import send_event_notification, convert_size, get_device_id, translate_string, load_user_details, translate_path, get_jellyfin_url, download_external_sub, get_bitrate
+from .utils import send_event_notification, convert_size, get_device_id, translate_string, load_user_details, translate_path, get_jellyfin_url, download_external_sub, get_bitrate, get_default_filters
 from .kodi_utils import HomeWindow
 from .datamanager import clear_old_cache_data
 from .item_functions import extract_item_info, add_gui_item, get_art
@@ -127,6 +128,74 @@ def play_list_of_items(id_list):
             log.debug("Playfile item was None, so can not play!")
             return
         items.append(result)
+
+    return play_all_files(items)
+
+
+def play_list_shuffle(list_url):
+    """
+    Play every playable item in a directory list in random order.
+
+    Takes the same Jellyfin list url used to build the directory, requests it
+    again ordered randomly (limited by the max_play_queue setting) and plays
+    the resulting items. Sub folders are ignored, only directly playable items
+    are queued.
+    """
+    log.debug("play_list_shuffle called with url: {0}".format(list_url))
+
+    if not list_url:
+        return
+
+    max_queue = int(settings.getSetting('max_play_queue'))
+    item_limit = int(settings.getSetting("show_x_filtered_items"))
+
+    # resolve placeholders the same way process_directory does
+    url = unquote(list_url)
+    url = url.replace('{server}', '')
+    url = url.replace('{field_filters}', get_default_filters())
+    url = url.replace('{ItemLimit}', str(item_limit))
+    url = url.replace('{userid}', api.user_id)
+
+    # split path and query so we can override the ordering
+    if '?' in url:
+        path, query = url.split('?', 1)
+    else:
+        path, query = url, ''
+
+    url_params = dict(parse_qsl(query))
+
+    # drop paging and request a random ordering limited by the max queue size
+    url_params.pop('StartIndex', None)
+    url_params['SortBy'] = 'Random'
+    url_params['Limit'] = max_queue
+    url_params['Fields'] = 'MediaSources'
+
+    request_url = get_jellyfin_url(path, url_params)
+    result = api.get(request_url)
+    if result is None:
+        log.debug("play_list_shuffle result was None, nothing to play")
+        return
+
+    # different endpoints return either a dict with "Items" or a plain list
+    if isinstance(result, dict):
+        items = result.get("Items", [])
+    elif isinstance(result, list):
+        items = result
+    else:
+        items = []
+
+    # only keep playable items, ignore any sub folders
+    items = [item for item in items if not item.get("IsFolder", False)]
+
+    if not items:
+        log.debug("play_list_shuffle found no playable items")
+        return
+
+    # guarantee a random order even for endpoints that ignore SortBy=Random
+    # (e.g. Latest / NextUp / Resume) and cap to the max queue size
+    random.shuffle(items)
+    if len(items) > max_queue:
+        items = items[:max_queue]
 
     return play_all_files(items)
 

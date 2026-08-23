@@ -1260,3 +1260,11 @@ msgstr "Favorite"
 msgctxt "#30687"
 msgid "Favorites"
 msgstr "Favorites"
+
+msgctxt "#30688"
+msgid "Play randomly"
+msgstr "Play randomly"
+
+msgctxt "#30689"
+msgid "Show 'Play randomly' option in lists"
+msgstr "Show 'Play randomly' option in lists"
