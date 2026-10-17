@@ -712,9 +712,9 @@ def normalize_url_for_filtering(url):
             'Recursive': True
         }
         if len(url_parts) == 2:
-            query_params = dict(parse_qsl(url_parts[1]))
-            if 'seasonid' in query_params:
-                params['SeasonId'] = query_params['seasonid']
+            for key, value in parse_qsl(url_parts[1]):
+                if key.lower() == 'seasonid':
+                    params['SeasonId'] = value
         return get_jellyfin_url('/Users/{userid}/Items', params)
     
     elif '/users/' in url_lower:

@@ -120,6 +120,7 @@ python3 build.py --version py3
 - GIF proxy authentication via embedded Tag
 - Empty Favorites fix (drop IncludeItemTypes parameter)
 - Filter boolean/Video-type/Shows normalization fixes
+- Season filter applied when url uses `seasonId` (case-insensitive query lookup)
 
 ## Translation Strings Added
 
