@@ -370,7 +370,7 @@ def extract_item_info(item, gui_options):
     return item_details
 
 
-def add_gui_item(url, item_details, display_options, folder=True, default_sort=False):
+def add_gui_item(url, item_details, display_options, folder=True, default_sort=False, filter_params=None):
 
     if not item_details.name:
         return None
@@ -387,6 +387,10 @@ def add_gui_item(url, item_details, display_options, folder=True, default_sort=F
             u += '&name_format=' + quote(item_details.name_format)
         if default_sort:
             u += '&sort=none'
+        # carry the active filter into the child listing
+        if filter_params:
+            for key, value in filter_params.items():
+                u += '&' + key + '=' + quote(str(value))
     else:
         u = sys.argv[0] + "?item_id=" + url + "&mode=PLAY"
 

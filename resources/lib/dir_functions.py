@@ -22,6 +22,33 @@ from .utils import (
 
 log = LazyLogger(__name__)
 
+# Jellyfin filter params that must be inherited by child folder listings.
+# IncludeItemTypes is intentionally not propagated, it would empty child
+# listings of other item types (see CUSTOM_CHANGES.md).
+FILTER_PARAM_KEYS = ("IsPlayed", "Filters")
+
+
+def get_filter_params(url_params):
+    """Return the active filter params present in a dict of url params."""
+    return dict((key, url_params[key]) for key in FILTER_PARAM_KEYS if key in url_params)
+
+
+def apply_filter_params(url, filter_params):
+    """Merge filter params into a Jellyfin api url, overriding existing values.
+
+    Works on the raw url string so placeholders like {userid} and the rest of
+    the query string are left untouched.
+    """
+    if not filter_params:
+        return url
+    for key, value in filter_params.items():
+        pattern = r'([?&])' + key + r'=[^&]*'
+        if re.search(pattern, url):
+            url = re.sub(pattern, lambda match: match.group(1) + key + '=' + str(value), url)
+        else:
+            url = url + '&' + key + '=' + str(value)
+    return url
+
 
 @timer
 def get_content(url, params):
@@ -31,6 +58,12 @@ def get_content(url, params):
     media_type = params.get("media_type", None)
     if not media_type:
         xbmcgui.Dialog().ok(translate_string(30135), translate_string(30139))
+
+    # inherit the active filter from the parent listing (it travels in the plugin url)
+    inherited_filters = get_filter_params(params)
+    if inherited_filters:
+        url = apply_filter_params(url, inherited_filters)
+        log.debug("Inherited filters: {0}".format(inherited_filters))
 
     log.debug("URL: {0}".format(url))
     log.debug("MediaType: {0}".format(media_type))
@@ -320,6 +353,9 @@ def process_directory(url, progress, params, use_cache_data=False):
     url = unquote(url)
     url = url.replace('{userid}', user_id)
 
+    # filters active in this listing, inherited by the child folder listings
+    filter_params = get_filter_params(dict(parse_qsl(url)))
+
     cache_file, item_list, total_records, cache_thread = data_manager.get_items(url, gui_options, use_cache)
 
     # flatten single season
@@ -443,7 +479,8 @@ def process_directory(url, progress, params, use_cache_data=False):
             default_sort = item_details.item_type == "Playlist"
 
             if show_empty_folders or item_details.recursive_item_count != 0:
-                gui_item = add_gui_item(u, item_details, display_options, default_sort=default_sort)
+                gui_item = add_gui_item(u, item_details, display_options, default_sort=default_sort,
+                                        filter_params=filter_params)
                 if gui_item:
                     dir_items.append(gui_item)
             else:
@@ -456,7 +493,7 @@ def process_directory(url, progress, params, use_cache_data=False):
                  '&CollapseBoxSetItems=false' +
                  '&Recursive=true' +
                  '&format=json')
-            gui_item = add_gui_item(u, item_details, display_options)
+            gui_item = add_gui_item(u, item_details, display_options, filter_params=filter_params)
             if gui_item:
                 dir_items.append(gui_item)
 
@@ -500,7 +537,8 @@ def process_directory(url, progress, params, use_cache_data=False):
         item_details.watched_episodes = total_watched
         item_details.mode = "GET_CONTENT"
 
-        gui_item = add_gui_item(series_url, item_details, display_options, folder=True)
+        gui_item = add_gui_item(series_url, item_details, display_options, folder=True,
+                                filter_params=filter_params)
         if gui_item:
             dir_items.append(gui_item)
 

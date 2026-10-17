@@ -56,7 +56,10 @@ After merge, verify the custom changes still hold using the checklist below.
 
 **Files/functions:**
 - `resources/lib/menu_functions.py`: `show_filter_menu`, `get_filtered_list_url`, `normalize_url_for_filtering`
-- `resources/lib/dir_functions.py`: `is_filterable_list`, `build_filter_menu_url`
+- `resources/lib/dir_functions.py`: `is_filterable_list`, `build_filter_menu_url`, `get_filter_params`, `apply_filter_params`
+- `resources/lib/item_functions.py`: `add_gui_item` (`filter_params` kwarg)
+
+**Behaviour:** El filtro activo (`IsPlayed` / `Filters`) se propaga a las subcarpetas, de modo que al entrar en una serie, temporada o carpeta hija la lista sigue filtrada. `IncludeItemTypes` no se propaga a propósito.
 
 **Translation strings:** 30683-30687 (en_gb + es_es)
 
