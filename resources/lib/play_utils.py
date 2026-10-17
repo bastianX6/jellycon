@@ -168,7 +168,14 @@ def play_list_shuffle(list_url):
     url_params.pop('StartIndex', None)
     url_params['SortBy'] = 'Random'
     url_params['Limit'] = max_queue
-    url_params['Fields'] = 'MediaSources'
+
+    # merge the listing's Fields with the ones we need instead of replacing them,
+    # so the OSD metadata (Overview) and playable media info (MediaSources) survive
+    fields = [field.strip() for field in url_params.get('Fields', '').split(',') if field.strip()]
+    for field in ('MediaSources', 'Overview'):
+        if field not in fields:
+            fields.append(field)
+    url_params['Fields'] = ','.join(fields)
 
     request_url = get_jellyfin_url(path, url_params)
     result = api.get(request_url)

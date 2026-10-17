@@ -92,7 +92,7 @@ After merge, verify the custom changes still hold using the checklist below.
 **Files/functions:**
 - `resources/lib/dir_functions.py`: `has_playable_items`, `build_shuffle_all_url`, "Play randomly" insertion in `get_content`
 - `resources/lib/functions.py`: `PLAY_LIST_SHUFFLE` mode dispatch
-- `resources/lib/play_utils.py`: `play_list_shuffle`
+- `resources/lib/play_utils.py`: `play_list_shuffle` (merges `Fields` so `Overview`/`MediaSources` are kept, the OSD plot now shows during shuffle playback)
 - `resources/settings.xml`: `show_shuffle_all` (default true, label 30689)
 
 **Translation strings:** 30688 (Play randomly), 30689 (setting label)

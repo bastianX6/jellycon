@@ -150,6 +150,12 @@ def main_entry_point():
         show_filter_menu(params)
     elif mode == "PLAY_LIST_SHUFFLE":
         play_list_shuffle(param_url)
+
+        # close the directory so Kodi does not keep the busy spinner up
+        try:
+            xbmcplugin.endOfDirectory(int(sys.argv[1]), succeeded=True, cacheToDisc=False)
+        except (IndexError, ValueError):
+            pass
     else:
         log.debug("JellyCon -> Mode: {0}".format(mode))
         log.debug("JellyCon -> URL: {0}".format(param_url))
