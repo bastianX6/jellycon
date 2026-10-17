@@ -20,7 +20,7 @@ from six.moves.urllib.parse import urlencode, unquote, parse_qsl
 from .jellyfin import api
 from .lazylogger import LazyLogger
 from .dialogs import ResumeDialog
-from .utils import send_event_notification, convert_size, get_device_id, translate_string, load_user_details, translate_path, get_jellyfin_url, download_external_sub, get_bitrate, get_default_filters
+from .utils import send_event_notification, convert_size, get_device_id, translate_string, load_user_details, translate_path, get_jellyfin_url, download_external_sub, get_bitrate, get_default_filters, normalize_url_for_shuffle
 from .kodi_utils import HomeWindow
 from .datamanager import clear_old_cache_data
 from .item_functions import extract_item_info, add_gui_item, get_art
@@ -132,14 +132,22 @@ def play_list_of_items(id_list):
     return play_all_files(items)
 
 
+PLAYABLE_ITEM_TYPES = frozenset(
+    ['movie', 'episode', 'audio', 'video', 'musicvideo'])
+SHUFFLE_EXCLUDE_TYPES = (
+    'Folder', 'CollectionFolder', 'Season', 'Series', 'BoxSet',
+    'Playlist', 'MusicArtist', 'MusicAlbum', 'MusicGenre')
+
+
 def play_list_shuffle(list_url):
     """
-    Play every playable item in a directory list in random order.
+    Play every playable item under a directory list in random order.
 
     Takes the same Jellyfin list url used to build the directory, requests it
     again ordered randomly (limited by the max_play_queue setting) and plays
-    the resulting items. Sub folders are ignored, only directly playable items
-    are queued.
+    the resulting items. Sub folders are included recursively, so the queue is
+    an interleaved random mix of everything below the listing (episodes of all
+    seasons, nested folders, ...), not just its direct children.
     """
     log.debug("play_list_shuffle called with url: {0}".format(list_url))
 
@@ -156,6 +164,12 @@ def play_list_shuffle(list_url):
     url = url.replace('{ItemLimit}', str(item_limit))
     url = url.replace('{userid}', api.user_id)
 
+    # series/season listings must be turned into recursive item queries,
+    # otherwise we would only queue season or series containers
+    url = normalize_url_for_shuffle(url)
+    # the helper rebuilds the path with a {userid} placeholder
+    url = url.replace('{userid}', api.user_id)
+
     # split path and query so we can override the ordering
     if '?' in url:
         path, query = url.split('?', 1)
@@ -168,6 +182,38 @@ def play_list_shuffle(list_url):
     url_params.pop('StartIndex', None)
     url_params['SortBy'] = 'Random'
     url_params['Limit'] = max_queue
+
+    # recursively walk sub folders and never let container types into the
+    # queue. Only add the exclusion when this function owns the type
+    # selection; a playable IncludeItemTypes from the listing is kept as is.
+    if path.rstrip('/').lower().endswith('/items'):
+        url_params['Recursive'] = 'True'
+
+        include_types = url_params.get('IncludeItemTypes')
+        owned_type_selection = True
+
+        if include_types:
+            types_list = [item.strip() for item in include_types.split(',') if item.strip()]
+            playable = [item for item in types_list if item.lower() in PLAYABLE_ITEM_TYPES]
+            if playable:
+                # the listing already selects playable items (e.g. movies),
+                # keep its selection untouched and just recurse
+                owned_type_selection = False
+            elif any(item.lower() == 'season' for item in types_list):
+                # seasons map to their episodes, everything else container
+                # only is irrelevant for playback so let the excludes do it
+                url_params['IncludeItemTypes'] = 'Episode'
+            else:
+                url_params.pop('IncludeItemTypes', None)
+
+        if owned_type_selection:
+            exclude_types = [item.strip() for item in url_params.get('ExcludeItemTypes', '').split(',') if item.strip()]
+            known = set(item.lower() for item in exclude_types)
+            for item in SHUFFLE_EXCLUDE_TYPES:
+                if item.lower() not in known:
+                    exclude_types.append(item)
+                    known.add(item.lower())
+            url_params['ExcludeItemTypes'] = ','.join(exclude_types)
 
     # merge the listing's Fields with the ones we need instead of replacing them,
     # so the OSD metadata (Overview) and playable media info (MediaSources) survive
@@ -191,7 +237,7 @@ def play_list_shuffle(list_url):
     else:
         items = []
 
-    # only keep playable items, ignore any sub folders
+    # safety net: exclude any container item the server still returned
     items = [item for item in items if not item.get("IsFolder", False)]
 
     if not items:

@@ -22,7 +22,7 @@ import xbmc
 import xbmcvfs
 from kodi_six.utils import py2_encode, py2_decode
 from six import ensure_text, ensure_binary, text_type
-from six.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlencode, parse_qsl
 
 from .lazylogger import LazyLogger
 from .kodi_utils import HomeWindow
@@ -50,6 +50,58 @@ def get_jellyfin_url(path, params):
     params["format"] = "json"
     url_params = urlencode(params)
     return '{}?{}'.format(path, url_params)
+
+
+def normalize_url_for_shuffle(url):
+    """
+    Rewrite series based list urls so a shuffle query recurses into episodes.
+
+    Show/season listings point at collection folders: replaying them with a
+    random ordering would mostly return seasons or series containers. Map them
+    to a recursive Users/Items query for the actual playable episodes instead,
+    keeping the listing's inherited filters. Any other url is returned
+    unchanged.
+    """
+    url_lower = url.lower()
+    if '/shows/' not in url_lower:
+        return url
+
+    url_parts = url.split('?', 1)
+    path_parts = url_parts[0].split('/')
+    try:
+        series_id = path_parts[path_parts.index('Shows') + 1]
+    except (ValueError, IndexError):
+        return url
+
+    query_params = {}
+    season_id = None
+    if len(url_parts) == 2:
+        for key, value in parse_qsl(url_parts[1]):
+            key_lower = key.lower()
+            if key_lower == 'seasonid':
+                season_id = value
+                continue
+            # these are owned by the shuffle query itself
+            if key_lower in ('parentid', 'includeitemtypes', 'recursive',
+                             'startindex', 'limit', 'sortby'):
+                continue
+            query_params[key] = value
+
+    if '/seasons?' in url_lower:
+        query_params['ParentId'] = series_id
+        query_params['IncludeItemTypes'] = 'Episode'
+        query_params['Recursive'] = True
+        return get_jellyfin_url('/Users/{userid}/Items', query_params)
+
+    if '/episodes?' in url_lower:
+        query_params['ParentId'] = series_id
+        query_params['IncludeItemTypes'] = 'Episode'
+        query_params['Recursive'] = True
+        if season_id:
+            query_params['SeasonId'] = season_id
+        return get_jellyfin_url('/Users/{userid}/Items', query_params)
+
+    return url
 
 
 def get_checksum(item):

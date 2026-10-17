@@ -44,6 +44,7 @@ After merge, verify the custom changes still hold using the checklist below.
 - `resources/language/resource.language.es_es/strings.po`: strings 30683-30689
 - `resources/lib/dir_functions.py`: `has_playable_items`, `build_shuffle_all_url`, get_content "Play randomly" insertion
 - `resources/lib/play_utils.py`: `play_list_shuffle`
+- `resources/lib/utils.py`: `normalize_url_for_shuffle`
 - `resources/lib/functions.py`: `PLAY_LIST_SHUFFLE` mode dispatch
 - `resources/settings.xml`: `show_shuffle_all` setting (label 30689)
 - `release.yaml`: version notation with `~beta`
@@ -87,7 +88,7 @@ After merge, verify the custom changes still hold using the checklist below.
 
 ### 4. Play Randomly (Shuffle All)
 
-**Description:** Adds a "Play randomly" (Reproducir aleatoriamente) entry at the top of any media listing that contains playable items. Selecting it re-queries the same Jellyfin list with a random ordering (limited by the `max_play_queue` setting), ignoring sub folders and the Filters/paging UI entries, and plays all resulting items as a Kodi video playlist. Controlled by the `show_shuffle_all` setting (enabled by default).
+**Description:** Adds a "Play randomly" (Reproducir aleatoriamente) entry at the top of any media listing that contains playable items. Selecting it re-queries the same Jellyfin list with a random ordering (limited by the `max_play_queue` setting) and plays all resulting items as a Kodi video playlist. The shuffle is recursive and interleaved: sub folders are walked (`Recursive=True`) so the queue is a random mix of everything below the listing (e.g. episodes across all seasons) instead of only its direct children. Container types (`Folder, CollectionFolder, Season, Series, BoxSet, Playlist, MusicArtist, MusicAlbum, MusicGenre`) are excluded when the addon owns the type selection, while a playable `IncludeItemTypes` from the listing is kept. Show/season listing urls are mapped to a recursive `Users/{userid}/Items` episode query, so inherited filters (`IsPlayed` / `Filters`) keep working. On Jellyfin servers with the `SortBy=Random` bug (<= 10.11.6) the client-side shuffle fallback still guarantees a random order. Controlled by the `show_shuffle_all` setting (enabled by default).
 
 **Files/functions:**
 - `resources/lib/dir_functions.py`: `has_playable_items`, `build_shuffle_all_url`, "Play randomly" insertion in `get_content`
