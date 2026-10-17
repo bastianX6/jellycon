@@ -41,6 +41,10 @@ VERSION_CHECK=false
 REQUIRE_BRANCH=false
 TARGET_BRANCH="release/1.0.3-beta"
 
+# Último upstream integrado: release documentada + commit de master fusionado
+DOC_BASE_VERSION="1.0.2"
+DOC_BASE_COMMIT="fc8cde5"
+
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -160,12 +164,12 @@ if [[ "$VERSION_CHECK" == true ]]; then
   echo_prefix "=== Version Comparison ==="
   printf "%-20s %s\n" "Upstream version:" "$UPSTREAM_VERSION"
   printf "%-20s %s\n" "Fork version:" "$FORK_VERSION"
-  printf "%-20s %s\n" "Documented base:" "official v1.0.2"
+  printf "%-20s %s\n" "Documented base:" "upstream master @ ${DOC_BASE_COMMIT} (last release v${DOC_BASE_VERSION})"
   echo ""
   
   # Simple check if upstream looks newer (very basic semver comparison)
-  if [[ "$UPSTREAM_VERSION" != "unknown" && "$UPSTREAM_VERSION" != "1.0.2" ]]; then
-    echo_prefix "NOTE: Upstream version differs from documented base (v1.0.2)"
+  if [[ "$UPSTREAM_VERSION" != "unknown" && "$UPSTREAM_VERSION" != "$DOC_BASE_VERSION" ]]; then
+    echo_prefix "NOTE: Upstream release version ($UPSTREAM_VERSION) differs from last documented upstream release (v$DOC_BASE_VERSION)"
   fi
 fi
 

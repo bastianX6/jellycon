@@ -57,7 +57,7 @@ The build script appends `+py3` to the generated addon version. The tilde is val
 ## 2. Current state (as of writing)
 
 - The source repository branch is `release/1.0.3-beta`.
-- The source version is `1.0.10~beta`.
+- The source version is `1.0.11~beta`.
 - The Kodi repository `main` branch has `plugin.video.jellycon-1.0.10~beta+py3.zip` published.
 - The Kodi repository also contains the `repository.jellycon` addon at version `1.0.0`. This repository addon is stable and does not change for every JellyCon plugin release.
 

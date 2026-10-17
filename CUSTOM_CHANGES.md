@@ -7,7 +7,7 @@ The custom changes add animated GIF preview thumbnails and enhanced media filter
 ## How to Sync with Upstream
 
 **Official repo:** https://github.com/jellyfin/jellycon  
-**Current base version:** official v1.0.2
+**Current base:** upstream `master` @ `fc8cde5` (merged 2026-10-17 as `fad264f`; ahead of the last upstream release, v1.0.2)
 
 Use the `sync_upstream.sh` script to pull upstream changes safely:
 
