@@ -2,12 +2,14 @@ version: '1.0.11~beta'
 changelog: |-
   New Features
   ------------
-  + Add 'Play randomly' option to media listings to shuffle-play all playable items in the list
+  + Add 'Play randomly' option to media listings to shuffle-play all playable items, now recursing into subfolders with an interleaved random mix and respecting the active filters
   + Add Unwatched / Watched / Favorite / Continue Watching filters to media listings
   + Add Favorites entry to the main menu showing all favorite items
   + Animated GIF preview thumbnails (use local .gif proxy so Kodi animates them)
   + Animate GIF preview thumbnails via local cache (downloaded lazily when a folder is opened)
   + Download GIF previews synchronously when opening a folder (reuses already-downloaded GIFs)
+  + Active filters (Unwatched/Watched/Favorite) now persist when navigating into subfolders
+  + Synced with upstream master (Weblate translations + release CI hardening)
 
   Bug Fixes
   ---------
@@ -18,6 +20,11 @@ changelog: |-
   + Show Filters entry on all media listings including home videos/mixed
   + Show Filters at every navigation level
   + Fix empty Watched / Continue Watching results (bool casing, Video type, /Shows normalization)
+  + Fix season filter: filtering episodes of one season no longer returns all seasons (seasonId case mismatch)
+  + Mark items as watched after playback from any listing (refresh container once playback stops)
+  + Fix skip-cache targeting the wrong listing after browsing during playback
+  + Play randomly now shows the plot/OSD metadata (keep Fields when building the shuffle queue)
+  + Close the directory view immediately when starting a random play (no busy spinner)
 dependencies:
   py2:
     - addon: 'xbmc.python'
