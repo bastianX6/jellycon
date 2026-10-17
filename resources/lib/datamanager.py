@@ -71,10 +71,11 @@ class DataManager:
         home_window.set_property(cache_file, "true")
 
         clear_cache = home_window.get_property("skip_cache_for_" + url)
-        if clear_cache and os.path.isfile(cache_file):
-            log.debug("Clearing cache data and loading new data")
+        if clear_cache:
             home_window.clear_property("skip_cache_for_" + url)
-            os.remove(cache_file)
+            if os.path.isfile(cache_file):
+                log.debug("Clearing cache data and loading new data")
+                os.remove(cache_file)
 
         # try to load the list item data from the cache
         if os.path.isfile(cache_file) and use_cache:

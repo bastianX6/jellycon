@@ -121,6 +121,8 @@ python3 build.py --version py3
 - Empty Favorites fix (drop IncludeItemTypes parameter)
 - Filter boolean/Video-type/Shows normalization fixes
 - Season filter applied when url uses `seasonId` (case-insensitive query lookup)
+- Container refresh after playback stops (skipped between queued playlist items) so watched/resume state updates
+- `skip_cache` scoped to the listing that launched playback instead of any last-rendered listing
 
 ## Translation Strings Added
 

@@ -499,7 +499,7 @@ def process_directory(url, progress, params, use_cache_data=False):
 
         else:
             u = item_details.id
-            gui_item = add_gui_item(u, item_details, display_options, folder=False)
+            gui_item = add_gui_item(u, item_details, display_options, folder=False, listing_url=url)
             if gui_item:
                 dir_items.append(gui_item)
 

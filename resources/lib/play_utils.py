@@ -302,7 +302,9 @@ def play_file(play_info):
 
     channel_id = None
     home_window = HomeWindow()
-    last_url = home_window.get_property("last_content_url")
+    # prefer the listing the item was launched from, falling back to the last
+    # content url for play paths that do not carry it (widgets, context menu)
+    last_url = play_info.get("listing_url") or home_window.get_property("last_content_url")
     if last_url:
         home_window.set_property("skip_cache_for_" + last_url, "true")
 
@@ -1238,6 +1240,11 @@ def stop_all_playback():
         del played_information[entry]
 
     home_window.set_property('played_information', json.dumps(played_information))
+
+    # refresh the listing that launched playback so watched state updates,
+    # but not between queued playlist items
+    if clear_entries and not xbmc.getCondVisibility("Player.HasNext"):
+        xbmc.executebuiltin("Container.Refresh")
 
 
 def get_playing_data():

@@ -929,6 +929,9 @@ def play_action(params):
 
     action = params.get("action", "play")
 
+    listing_url = params.get("listing_url")
+    log.debug("LISTING_URL: {0}".format(listing_url))
+
     # set the current playing item id
     # set all the playback info, this will be picked up by the service
     # the service will then start the playback
@@ -943,6 +946,7 @@ def play_action(params):
     play_info["media_source_id"] = media_source_id
     play_info["subtitle_stream_index"] = subtitle_stream_index
     play_info["audio_stream_index"] = audio_stream_index
+    play_info["listing_url"] = listing_url
     log.info("Sending jellycon_play_action : {0}".format(play_info))
     play_file(play_info)
 
