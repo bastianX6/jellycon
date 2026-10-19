@@ -1,18 +1,9 @@
-version: '1.0.12~beta'
+version: '1.0.13~beta'
 changelog: |-
-  New Features
-  ------------
-  + Play randomly now recurses into subfolders with an interleaved random mix across folders and respects active filters
-  + Active filters (Unwatched/Watched/Favorite) now persist when navigating into subfolders
-  + Synced with upstream master (Weblate translations + release CI hardening)
-
   Bug Fixes
   ---------
-  + Fix season filter: filtering episodes of one season no longer returns all seasons (seasonId case mismatch)
-  + Mark items as watched after playback from any listing (refresh container once playback stops)
-  + Fix skip-cache targeting the wrong listing after browsing during playback
-  + Play randomly now shows the plot/OSD metadata (keep Fields when building the shuffle queue)
-  + Close the directory view immediately when starting a random play (no busy spinner)
+  + Report every item in a Play randomly queue to Jellyfin, so all shuffled videos are marked as watched (not just the first)
+  + Invalidate the originating listing cache after shuffle playback so watched state appears when the list refreshes
 dependencies:
   py2:
     - addon: 'xbmc.python'
