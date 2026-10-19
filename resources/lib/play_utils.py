@@ -96,6 +96,10 @@ def play_all_files(items, play_items=True):
         playlist_data[playurl]["playback_type"] = playback_type_string
         playlist_data[playurl]["play_session_id"] = play_session_id
         playlist_data[playurl]["play_action_type"] = "play_all"
+        if item.get("Type") is not None:
+            playlist_data[playurl]["item_type"] = item.get("Type")
+        if item.get("CanDelete") is not None:
+            playlist_data[playurl]["can_delete"] = item.get("CanDelete")
         home_window.set_property('playlist', json.dumps(playlist_data))
 
         # Set now_playing to the first track
@@ -163,6 +167,11 @@ def play_list_shuffle(list_url):
     url = url.replace('{field_filters}', get_default_filters())
     url = url.replace('{ItemLimit}', str(item_limit))
     url = url.replace('{userid}', api.user_id)
+
+    # make the listing that launched the shuffle refetch once playback stops,
+    # the url must match the one get_items cached (before any query changes)
+    home_window = HomeWindow()
+    home_window.set_property("skip_cache_for_" + url, "true")
 
     # series/season listings must be turned into recursive item queries,
     # otherwise we would only queue season or series containers
@@ -1307,8 +1316,12 @@ def get_playing_data():
     try:
         play_data = json.loads(play_data_string)
     except ValueError:
-        # This isn't a JellyCon item
-        return {}
+        # now_playing is cleared when a playlist item ends, so for queued
+        # items it is empty here and the item data lives in playlist instead
+        play_data = {}
+
+    if not isinstance(play_data, dict):
+        play_data = {}
 
     played_information_string = home_window.get_property('played_information')
     if played_information_string:
@@ -1331,15 +1344,23 @@ def get_playing_data():
         log.error("get_playing_data : getPlayingFile() : {0}".format(e))
         return {}
     log.debug("get_playing_data : getPlayingFile() : {0}".format(playing_file))
-    if server in playing_file and item_id is not None:
+    if server in playing_file:
+        if item_id is None or (item_id not in playing_file and playing_file in playlist_data):
+            # if the current now_playing data is missing (next queued item) or
+            # isn't correct, pull it from the playlist_data
+            if playing_file in playlist_data:
+                play_data = playlist_data.pop(playing_file)
+                item_id = play_data.get("item_id")
+                # Update now_playing data
+                home_window.set_property('playlist', json.dumps(playlist_data))
+            elif item_id is None:
+                return {}
+
+        if item_id is None:
+            return {}
+
         play_time = player.getTime()
         total_play_time = player.getTotalTime()
-
-        if item_id is not None and item_id not in playing_file and playing_file in playlist_data:
-            # if the current now_playing data isn't correct, pull it from the playlist_data
-            play_data = playlist_data.pop(playing_file)
-            # Update now_playing data
-            home_window.set_property('playlist', json.dumps(playlist_data))
 
         play_data["current_position"] = play_time
         play_data["duration"] = total_play_time

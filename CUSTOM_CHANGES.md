@@ -123,6 +123,8 @@ python3 build.py --version py3
 - Filter boolean/Video-type/Shows normalization fixes
 - Season filter applied when url uses `seasonId` (case-insensitive query lookup)
 - Container refresh after playback stops (skipped between queued playlist items) so watched/resume state updates
+- Shuffle playback reporting fix: after `now_playing` is cleared at the end of each item, the next item is resolved from the `playlist` property, so items 2..N are reported to `/Sessions/Playing` and marked watched
+- Shuffle invalidates the originating listing cache (`skip_cache_for_<url>`) so the post-stop `Container.Refresh` refetches the watched state
 - `skip_cache` scoped to the listing that launched playback instead of any last-rendered listing
 
 ## Translation Strings Added
